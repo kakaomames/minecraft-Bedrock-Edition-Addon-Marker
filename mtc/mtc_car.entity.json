@@ -1,0 +1,1577 @@
+{
+    "format_version": "1.13.0",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "mtc:mtc_car",
+            "is_spawnable": true,
+            "is_summonable": true,
+            "is_experimental": false,
+            "animations": {
+                "door_controller": "controller.animation.mtc1254_1",
+                "trace_controller": "controller.animation.mtc1254_1_trace",
+                "spawn_controller": "controller.animation.mtc1254_1_spawn"
+            },
+            "scripts": {
+                "animate": [
+                    "door_controller",
+                    "trace_controller",
+                    "spawn_controller"
+                ]
+            }
+        },
+        "component_groups": {
+            "cp_v_0": {
+                "minecraft:variant": {
+                    "value": 10000
+                }
+            },
+            "cp_v_1": {
+                "minecraft:variant": {
+                    "value": 10001
+                }
+            },
+            "cp_v_2": {
+                "minecraft:variant": {
+                    "value": 10002
+                }
+            },
+            "cp_v_3": {
+                "minecraft:variant": {
+                    "value": 10003
+                }
+            },
+            "cp_v_4": {
+                "minecraft:variant": {
+                    "value": 10004
+                }
+            },
+            "cp_v_5": {
+                "minecraft:variant": {
+                    "value": 10005
+                }
+            },
+            "cp_v_6": {
+                "minecraft:variant": {
+                    "value": 10006
+                }
+            },
+            "cp_v_7": {
+                "minecraft:variant": {
+                    "value": 10007
+                }
+            },
+            "cp_v_8": {
+                "minecraft:variant": {
+                    "value": 10008
+                }
+            },
+            "cp_v_9": {
+                "minecraft:variant": {
+                    "value": 10009
+                }
+            },
+            "cp_v_10": {
+                "minecraft:variant": {
+                    "value": 10010
+                }
+            },
+            "cp_v_11": {
+                "minecraft:variant": {
+                    "value": 10011
+                }
+            },
+            "cp_v_12": {
+                "minecraft:variant": {
+                    "value": 10012
+                }
+            },
+            "cp_v_13": {
+                "minecraft:variant": {
+                    "value": 10013
+                }
+            },
+            "cp_v_14": {
+                "minecraft:variant": {
+                    "value": 10014
+                }
+            },
+            "cp_v_15": {
+                "minecraft:variant": {
+                    "value": 10015
+                }
+            },
+            "cp_v_16": {
+                "minecraft:variant": {
+                    "value": 10016
+                }
+            },
+            "cp_v_17": {
+                "minecraft:variant": {
+                    "value": 10017
+                }
+            },
+            "cp_v_18": {
+                "minecraft:variant": {
+                    "value": 10018
+                }
+            },
+            "cp_v_19": {
+                "minecraft:variant": {
+                    "value": 10019
+                }
+            },
+            "cp_v_20": {
+                "minecraft:variant": {
+                    "value": 10020
+                }
+            },
+            "cp_v_21": {
+                "minecraft:variant": {
+                    "value": 10021
+                }
+            },
+            "cp_v_22": {
+                "minecraft:variant": {
+                    "value": 10022
+                }
+            },
+            "cp_v_23": {
+                "minecraft:variant": {
+                    "value": 10023
+                }
+            },
+            "cp_v_24": {
+                "minecraft:variant": {
+                    "value": 10024
+                }
+            },
+            "cp_v_25": {
+                "minecraft:variant": {
+                    "value": 10025
+                }
+            },
+            "cp_v_26": {
+                "minecraft:variant": {
+                    "value": 10026
+                }
+            },
+            "cp_v_27": {
+                "minecraft:variant": {
+                    "value": 10027
+                }
+            },
+            "cp_v_28": {
+                "minecraft:variant": {
+                    "value": 10028
+                }
+            },
+            "cp_v_29": {
+                "minecraft:variant": {
+                    "value": 10029
+                }
+            },
+            "cp_v_30": {
+                "minecraft:variant": {
+                    "value": 10030
+                }
+            },
+            "cp_v_31": {
+                "minecraft:variant": {
+                    "value": 10031
+                }
+            },
+            "cp_v_32": {
+                "minecraft:variant": {
+                    "value": 10032
+                }
+            },
+            "cp_v_33": {
+                "minecraft:variant": {
+                    "value": 10033
+                }
+            },
+            "cp_v_34": {
+                "minecraft:variant": {
+                    "value": 10034
+                }
+            },
+            "cp_v_35": {
+                "minecraft:variant": {
+                    "value": 10035
+                }
+            },
+            "cp_v_36": {
+                "minecraft:variant": {
+                    "value": 10036
+                }
+            },
+            "cp_v_37": {
+                "minecraft:variant": {
+                    "value": 10037
+                }
+            },
+            "cp_v_38": {
+                "minecraft:variant": {
+                    "value": 10038
+                }
+            },
+            "cp_v_39": {
+                "minecraft:variant": {
+                    "value": 10039
+                }
+            },
+            "cp_v_40": {
+                "minecraft:variant": {
+                    "value": 10040
+                }
+            },
+            "cp_v_41": {
+                "minecraft:variant": {
+                    "value": 10041
+                }
+            },
+            "cp_v_42": {
+                "minecraft:variant": {
+                    "value": 10042
+                }
+            },
+            "cp_v_43": {
+                "minecraft:variant": {
+                    "value": 10043
+                }
+            },
+            "cp_v_44": {
+                "minecraft:variant": {
+                    "value": 10044
+                }
+            },
+            "cp_v_45": {
+                "minecraft:variant": {
+                    "value": 10045
+                }
+            },
+            "cp_v_46": {
+                "minecraft:variant": {
+                    "value": 10046
+                }
+            },
+            "cp_v_47": {
+                "minecraft:variant": {
+                    "value": 10047
+                }
+            },
+            "cp_v_48": {
+                "minecraft:variant": {
+                    "value": 10048
+                }
+            },
+            "cp_v_49": {
+                "minecraft:variant": {
+                    "value": 10049
+                }
+            },
+            "cp_v_50": {
+                "minecraft:variant": {
+                    "value": 10050
+                }
+            },
+            "cp_v_51": {
+                "minecraft:variant": {
+                    "value": 10051
+                }
+            },
+            "cp_v_52": {
+                "minecraft:variant": {
+                    "value": 10052
+                }
+            },
+            "cp_v_53": {
+                "minecraft:variant": {
+                    "value": 10053
+                }
+            },
+            "cp_v_54": {
+                "minecraft:variant": {
+                    "value": 10054
+                }
+            },
+            "cp_v_55": {
+                "minecraft:variant": {
+                    "value": 10055
+                }
+            },
+            "cp_v_56": {
+                "minecraft:variant": {
+                    "value": 10056
+                }
+            },
+            "cp_v_57": {
+                "minecraft:variant": {
+                    "value": 10057
+                }
+            },
+            "cp_v_58": {
+                "minecraft:variant": {
+                    "value": 10058
+                }
+            },
+            "cp_v_59": {
+                "minecraft:variant": {
+                    "value": 10059
+                }
+            },
+            "cp_v_60": {
+                "minecraft:variant": {
+                    "value": 10060
+                }
+            },
+            "cp_v_61": {
+                "minecraft:variant": {
+                    "value": 10061
+                }
+            },
+            "cp_v_62": {
+                "minecraft:variant": {
+                    "value": 10062
+                }
+            },
+            "cp_v_63": {
+                "minecraft:variant": {
+                    "value": 10063
+                }
+            },
+            "cp_v_64": {
+                "minecraft:variant": {
+                    "value": 10064
+                }
+            },
+            "cp_v_65": {
+                "minecraft:variant": {
+                    "value": 10065
+                }
+            },
+            "cp_v_66": {
+                "minecraft:variant": {
+                    "value": 10066
+                }
+            },
+            "cp_v_67": {
+                "minecraft:variant": {
+                    "value": 10067
+                }
+            },
+            "cp_v_68": {
+                "minecraft:variant": {
+                    "value": 10068
+                }
+            },
+            "cp_v_69": {
+                "minecraft:variant": {
+                    "value": 10069
+                }
+            },
+            "cp_v_70": {
+                "minecraft:variant": {
+                    "value": 10070
+                }
+            },
+            "cp_v_71": {
+                "minecraft:variant": {
+                    "value": 10071
+                }
+            },
+            "cp_v_72": {
+                "minecraft:variant": {
+                    "value": 10072
+                }
+            },
+            "cp_v_73": {
+                "minecraft:variant": {
+                    "value": 10073
+                }
+            },
+            "cp_v_74": {
+                "minecraft:variant": {
+                    "value": 10074
+                }
+            },
+            "cp_v_75": {
+                "minecraft:variant": {
+                    "value": 10075
+                }
+            },
+            "cp_v_76": {
+                "minecraft:variant": {
+                    "value": 10076
+                }
+            },
+            "cp_v_77": {
+                "minecraft:variant": {
+                    "value": 10077
+                }
+            },
+            "cp_v_78": {
+                "minecraft:variant": {
+                    "value": 10078
+                }
+            },
+            "cp_v_79": {
+                "minecraft:variant": {
+                    "value": 10079
+                }
+            },
+            "cp_v_80": {
+                "minecraft:variant": {
+                    "value": 10080
+                }
+            },
+            "cp_v_81": {
+                "minecraft:variant": {
+                    "value": 10081
+                }
+            },
+            "cp_v_82": {
+                "minecraft:variant": {
+                    "value": 10082
+                }
+            },
+            "cp_v_83": {
+                "minecraft:variant": {
+                    "value": 10083
+                }
+            },
+            "cp_v_84": {
+                "minecraft:variant": {
+                    "value": 10084
+                }
+            },
+            "cp_v_85": {
+                "minecraft:variant": {
+                    "value": 10085
+                }
+            },
+            "cp_v_86": {
+                "minecraft:variant": {
+                    "value": 10086
+                }
+            },
+            "cp_v_87": {
+                "minecraft:variant": {
+                    "value": 10087
+                }
+            },
+            "cp_v_88": {
+                "minecraft:variant": {
+                    "value": 10088
+                }
+            },
+            "cp_v_89": {
+                "minecraft:variant": {
+                    "value": 10089
+                }
+            },
+            "cp_v_90": {
+                "minecraft:variant": {
+                    "value": 10090
+                }
+            },
+            "cp_v_91": {
+                "minecraft:variant": {
+                    "value": 10091
+                }
+            },
+            "cp_v_92": {
+                "minecraft:variant": {
+                    "value": 10092
+                }
+            },
+            "cp_v_93": {
+                "minecraft:variant": {
+                    "value": 10093
+                }
+            },
+            "cp_v_94": {
+                "minecraft:variant": {
+                    "value": 10094
+                }
+            },
+            "cp_v_95": {
+                "minecraft:variant": {
+                    "value": 10095
+                }
+            },
+            "cp_v_96": {
+                "minecraft:variant": {
+                    "value": 10096
+                }
+            },
+            "cp_v_97": {
+                "minecraft:variant": {
+                    "value": 10097
+                }
+            },
+            "cp_v_98": {
+                "minecraft:variant": {
+                    "value": 10098
+                }
+            },
+            "cp_v_99": {
+                "minecraft:variant": {
+                    "value": 10099
+                }
+            },
+            "cp_v_100": {
+                "minecraft:variant": {
+                    "value": 10100
+                }
+            },
+            "cp_v_101": {
+                "minecraft:variant": {
+                    "value": 10101
+                }
+            },
+            "cp_v_102": {
+                "minecraft:variant": {
+                    "value": 10102
+                }
+            },
+            "cp_v_103": {
+                "minecraft:variant": {
+                    "value": 10103
+                }
+            },
+            "cp_v_104": {
+                "minecraft:variant": {
+                    "value": 10104
+                }
+            },
+            "cp_v_105": {
+                "minecraft:variant": {
+                    "value": 10105
+                }
+            },
+            "cp_v_106": {
+                "minecraft:variant": {
+                    "value": 10106
+                }
+            },
+            "cp_v_107": {
+                "minecraft:variant": {
+                    "value": 10107
+                }
+            },
+            "cp_v_108": {
+                "minecraft:variant": {
+                    "value": 10108
+                }
+            },
+            "cp_v_109": {
+                "minecraft:variant": {
+                    "value": 10109
+                }
+            },
+            "cp_v_110": {
+                "minecraft:variant": {
+                    "value": 10110
+                }
+            },
+            "cp_v_111": {
+                "minecraft:variant": {
+                    "value": 10111
+                }
+            },
+            "cp_v_112": {
+                "minecraft:variant": {
+                    "value": 10112
+                }
+            },
+            "cp_v_113": {
+                "minecraft:variant": {
+                    "value": 10113
+                }
+            },
+            "cp_v_114": {
+                "minecraft:variant": {
+                    "value": 10114
+                }
+            },
+            "cp_v_115": {
+                "minecraft:variant": {
+                    "value": 10115
+                }
+            },
+            "cp_v_116": {
+                "minecraft:variant": {
+                    "value": 10116
+                }
+            },
+            "cp_v_117": {
+                "minecraft:variant": {
+                    "value": 10117
+                }
+            },
+            "cp_v_118": {
+                "minecraft:variant": {
+                    "value": 10118
+                }
+            },
+            "cp_v_119": {
+                "minecraft:variant": {
+                    "value": 10119
+                }
+            },
+            "cp_v_120": {
+                "minecraft:variant": {
+                    "value": 10120
+                }
+            },
+            "cp_v_121": {
+                "minecraft:variant": {
+                    "value": 10121
+                }
+            },
+            "cp_v_122": {
+                "minecraft:variant": {
+                    "value": 10122
+                }
+            },
+            "cp_v_123": {
+                "minecraft:variant": {
+                    "value": 10123
+                }
+            },
+            "cp_v_124": {
+                "minecraft:variant": {
+                    "value": 10124
+                }
+            },
+            "cp_v_125": {
+                "minecraft:variant": {
+                    "value": 10125
+                }
+            },
+            "cp_v_126": {
+                "minecraft:variant": {
+                    "value": 10126
+                }
+            },
+            "cp_v_127": {
+                "minecraft:variant": {
+                    "value": 10127
+                }
+            },
+            "cp_v_128": {
+                "minecraft:variant": {
+                    "value": 10128
+                }
+            },
+            "cp_v_129": {
+                "minecraft:variant": {
+                    "value": 10129
+                }
+            },
+            "cp_v_130": {
+                "minecraft:variant": {
+                    "value": 10130
+                }
+            },
+            "cp_v_131": {
+                "minecraft:variant": {
+                    "value": 10131
+                }
+            },
+            "cp_v_132": {
+                "minecraft:variant": {
+                    "value": 10132
+                }
+            },
+            "cp_v_133": {
+                "minecraft:variant": {
+                    "value": 10133
+                }
+            },
+            "cp_v_134": {
+                "minecraft:variant": {
+                    "value": 10134
+                }
+            },
+            "cp_v_135": {
+                "minecraft:variant": {
+                    "value": 10135
+                }
+            },
+            "cp_v_136": {
+                "minecraft:variant": {
+                    "value": 10136
+                }
+            },
+            "cp_v_137": {
+                "minecraft:variant": {
+                    "value": 10137
+                }
+            },
+            "cp_v_138": {
+                "minecraft:variant": {
+                    "value": 10138
+                }
+            },
+            "cp_v_139": {
+                "minecraft:variant": {
+                    "value": 10139
+                }
+            },
+            "cp_v_140": {
+                "minecraft:variant": {
+                    "value": 10140
+                }
+            },
+            "cp_v_141": {
+                "minecraft:variant": {
+                    "value": 10141
+                }
+            },
+            "cp_v_142": {
+                "minecraft:variant": {
+                    "value": 10142
+                }
+            },
+            "cp_v_143": {
+                "minecraft:variant": {
+                    "value": 10143
+                }
+            },
+            "cp_v_144": {
+                "minecraft:variant": {
+                    "value": 10144
+                }
+            },
+            "cp_v_145": {
+                "minecraft:variant": {
+                    "value": 10145
+                }
+            },
+            "cp_v_146": {
+                "minecraft:variant": {
+                    "value": 10146
+                }
+            },
+            "cp_v_147": {
+                "minecraft:variant": {
+                    "value": 10147
+                }
+            },
+            "cp_v_148": {
+                "minecraft:variant": {
+                    "value": 10148
+                }
+            },
+            "cp_v_149": {
+                "minecraft:variant": {
+                    "value": 10149
+                }
+            },
+            "cp_v_150": {
+                "minecraft:variant": {
+                    "value": 10150
+                }
+            },
+            "cp_v_151": {
+                "minecraft:variant": {
+                    "value": 10151
+                }
+            },
+            "cp_v_152": {
+                "minecraft:variant": {
+                    "value": 10152
+                }
+            },
+            "cp_v_153": {
+                "minecraft:variant": {
+                    "value": 10153
+                }
+            },
+            "cp_v_154": {
+                "minecraft:variant": {
+                    "value": 10154
+                }
+            },
+            "cp_v_155": {
+                "minecraft:variant": {
+                    "value": 10155
+                }
+            },
+            "cp_v_156": {
+                "minecraft:variant": {
+                    "value": 10156
+                }
+            },
+            "cp_v_157": {
+                "minecraft:variant": {
+                    "value": 10157
+                }
+            },
+            "cp_v_158": {
+                "minecraft:variant": {
+                    "value": 10158
+                }
+            },
+            "cp_v_159": {
+                "minecraft:variant": {
+                    "value": 10159
+                }
+            },
+            "cp_v_160": {
+                "minecraft:variant": {
+                    "value": 10160
+                }
+            },
+            "cp_v_161": {
+                "minecraft:variant": {
+                    "value": 10161
+                }
+            },
+            "cp_v_162": {
+                "minecraft:variant": {
+                    "value": 10162
+                }
+            },
+            "cp_v_163": {
+                "minecraft:variant": {
+                    "value": 10163
+                }
+            },
+            "cp_v_164": {
+                "minecraft:variant": {
+                    "value": 10164
+                }
+            },
+            "cp_v_165": {
+                "minecraft:variant": {
+                    "value": 10165
+                }
+            },
+            "cp_v_166": {
+                "minecraft:variant": {
+                    "value": 10166
+                }
+            },
+            "cp_v_167": {
+                "minecraft:variant": {
+                    "value": 10167
+                }
+            },
+            "cp_v_168": {
+                "minecraft:variant": {
+                    "value": 10168
+                }
+            },
+            "cp_v_169": {
+                "minecraft:variant": {
+                    "value": 10169
+                }
+            },
+            "cp_v_170": {
+                "minecraft:variant": {
+                    "value": 10170
+                }
+            },
+            "cp_v_171": {
+                "minecraft:variant": {
+                    "value": 10171
+                }
+            },
+            "cp_v_172": {
+                "minecraft:variant": {
+                    "value": 10172
+                }
+            },
+            "cp_v_173": {
+                "minecraft:variant": {
+                    "value": 10173
+                }
+            },
+            "cp_v_174": {
+                "minecraft:variant": {
+                    "value": 10174
+                }
+            },
+            "cp_v_175": {
+                "minecraft:variant": {
+                    "value": 10175
+                }
+            },
+            "cp_v_176": {
+                "minecraft:variant": {
+                    "value": 10176
+                }
+            },
+            "cp_v_177": {
+                "minecraft:variant": {
+                    "value": 10177
+                }
+            },
+            "cp_v_178": {
+                "minecraft:variant": {
+                    "value": 10178
+                }
+            },
+            "cp_v_179": {
+                "minecraft:variant": {
+                    "value": 10179
+                }
+            },
+            "cp_v_180": {
+                "minecraft:variant": {
+                    "value": 10180
+                }
+            },
+            "cp_v_181": {
+                "minecraft:variant": {
+                    "value": 10181
+                }
+            },
+            "cp_v_182": {
+                "minecraft:variant": {
+                    "value": 10182
+                }
+            },
+            "cp_v_183": {
+                "minecraft:variant": {
+                    "value": 10183
+                }
+            },
+            "cp_v_184": {
+                "minecraft:variant": {
+                    "value": 10184
+                }
+            },
+            "cp_v_185": {
+                "minecraft:variant": {
+                    "value": 10185
+                }
+            },
+            "cp_v_186": {
+                "minecraft:variant": {
+                    "value": 10186
+                }
+            },
+            "cp_v_187": {
+                "minecraft:variant": {
+                    "value": 10187
+                }
+            },
+            "cp_v_188": {
+                "minecraft:variant": {
+                    "value": 10188
+                }
+            },
+            "cp_v_189": {
+                "minecraft:variant": {
+                    "value": 10189
+                }
+            },
+            "cp_v_190": {
+                "minecraft:variant": {
+                    "value": 10190
+                }
+            },
+            "cp_v_191": {
+                "minecraft:variant": {
+                    "value": 10191
+                }
+            },
+            "cp_v_192": {
+                "minecraft:variant": {
+                    "value": 10192
+                }
+            },
+            "cp_v_193": {
+                "minecraft:variant": {
+                    "value": 10193
+                }
+            },
+            "cp_v_194": {
+                "minecraft:variant": {
+                    "value": 10194
+                }
+            },
+            "cp_v_195": {
+                "minecraft:variant": {
+                    "value": 10195
+                }
+            },
+            "cp_v_196": {
+                "minecraft:variant": {
+                    "value": 10196
+                }
+            },
+            "cp_v_197": {
+                "minecraft:variant": {
+                    "value": 10197
+                }
+            },
+            "cp_v_198": {
+                "minecraft:variant": {
+                    "value": 10198
+                }
+            },
+            "cp_v_199": {
+                "minecraft:variant": {
+                    "value": 10199
+                }
+            },
+            "cp_v_200": {
+                "minecraft:variant": {
+                    "value": 10200
+                }
+            },
+            "cp_v_201": {
+                "minecraft:variant": {
+                    "value": 10201
+                }
+            },
+            "cp_v_202": {
+                "minecraft:variant": {
+                    "value": 10202
+                }
+            },
+            "cp_v_203": {
+                "minecraft:variant": {
+                    "value": 10203
+                }
+            },
+            "cp_v_204": {
+                "minecraft:variant": {
+                    "value": 10204
+                }
+            },
+            "cp_v_205": {
+                "minecraft:variant": {
+                    "value": 10205
+                }
+            },
+            "cp_v_206": {
+                "minecraft:variant": {
+                    "value": 10206
+                }
+            },
+            "cp_v_207": {
+                "minecraft:variant": {
+                    "value": 10207
+                }
+            },
+            "cp_v_208": {
+                "minecraft:variant": {
+                    "value": 10208
+                }
+            },
+            "cp_v_209": {
+                "minecraft:variant": {
+                    "value": 10209
+                }
+            },
+            "cp_v_210": {
+                "minecraft:variant": {
+                    "value": 10210
+                }
+            },
+            "cp_v_211": {
+                "minecraft:variant": {
+                    "value": 10211
+                }
+            },
+            "cp_v_212": {
+                "minecraft:variant": {
+                    "value": 10212
+                }
+            },
+            "cp_v_213": {
+                "minecraft:variant": {
+                    "value": 10213
+                }
+            },
+            "cp_v_214": {
+                "minecraft:variant": {
+                    "value": 10214
+                }
+            },
+            "cp_v_215": {
+                "minecraft:variant": {
+                    "value": 10215
+                }
+            },
+            "cp_v_216": {
+                "minecraft:variant": {
+                    "value": 10216
+                }
+            },
+            "cp_v_217": {
+                "minecraft:variant": {
+                    "value": 10217
+                }
+            },
+            "cp_v_218": {
+                "minecraft:variant": {
+                    "value": 10218
+                }
+            },
+            "cp_v_219": {
+                "minecraft:variant": {
+                    "value": 10219
+                }
+            },
+            "cp_v_220": {
+                "minecraft:variant": {
+                    "value": 10220
+                }
+            },
+            "cp_v_221": {
+                "minecraft:variant": {
+                    "value": 10221
+                }
+            },
+            "cp_v_222": {
+                "minecraft:variant": {
+                    "value": 10222
+                }
+            },
+            "cp_v_223": {
+                "minecraft:variant": {
+                    "value": 10223
+                }
+            },
+            "cp_v_224": {
+                "minecraft:variant": {
+                    "value": 10224
+                }
+            },
+            "cp_v_225": {
+                "minecraft:variant": {
+                    "value": 10225
+                }
+            },
+            "cp_v_226": {
+                "minecraft:variant": {
+                    "value": 10226
+                }
+            },
+            "cp_v_227": {
+                "minecraft:variant": {
+                    "value": 10227
+                }
+            },
+            "cp_v_228": {
+                "minecraft:variant": {
+                    "value": 10228
+                }
+            },
+            "cp_v_229": {
+                "minecraft:variant": {
+                    "value": 10229
+                }
+            },
+            "cp_v_230": {
+                "minecraft:variant": {
+                    "value": 10230
+                }
+            },
+            "cp_v_231": {
+                "minecraft:variant": {
+                    "value": 10231
+                }
+            },
+            "cp_v_232": {
+                "minecraft:variant": {
+                    "value": 10232
+                }
+            },
+            "cp_v_233": {
+                "minecraft:variant": {
+                    "value": 10233
+                }
+            },
+            "cp_v_234": {
+                "minecraft:variant": {
+                    "value": 10234
+                }
+            },
+            "cp_v_235": {
+                "minecraft:variant": {
+                    "value": 10235
+                }
+            },
+            "cp_v_236": {
+                "minecraft:variant": {
+                    "value": 10236
+                }
+            },
+            "cp_v_237": {
+                "minecraft:variant": {
+                    "value": 10237
+                }
+            },
+            "cp_v_238": {
+                "minecraft:variant": {
+                    "value": 10238
+                }
+            },
+            "cp_v_239": {
+                "minecraft:variant": {
+                    "value": 10239
+                }
+            },
+            "cp_v_240": {
+                "minecraft:variant": {
+                    "value": 10240
+                }
+            },
+            "cp_v_241": {
+                "minecraft:variant": {
+                    "value": 10241
+                }
+            },
+            "cp_v_242": {
+                "minecraft:variant": {
+                    "value": 10242
+                }
+            },
+            "cp_v_243": {
+                "minecraft:variant": {
+                    "value": 10243
+                }
+            },
+            "cp_v_244": {
+                "minecraft:variant": {
+                    "value": 10244
+                }
+            },
+            "cp_v_245": {
+                "minecraft:variant": {
+                    "value": 10245
+                }
+            },
+            "cp_v_246": {
+                "minecraft:variant": {
+                    "value": 10246
+                }
+            },
+            "cp_v_247": {
+                "minecraft:variant": {
+                    "value": 10247
+                }
+            },
+            "cp_v_248": {
+                "minecraft:variant": {
+                    "value": 10248
+                }
+            },
+            "cp_v_249": {
+                "minecraft:variant": {
+                    "value": 10249
+                }
+            },
+            "cp_v_250": {
+                "minecraft:variant": {
+                    "value": 10250
+                }
+            },
+            "cp_v_251": {
+                "minecraft:variant": {
+                    "value": 10251
+                }
+            },
+            "cp_v_252": {
+                "minecraft:variant": {
+                    "value": 10252
+                }
+            },
+            "cp_v_253": {
+                "minecraft:variant": {
+                    "value": 10253
+                }
+            },
+            "cp_v_254": {
+                "minecraft:variant": {
+                    "value": 10254
+                }
+            },
+            "cp_v_255": {
+                "minecraft:variant": {
+                    "value": 10255
+                }
+            },
+            "cp_v_256": {
+                "minecraft:variant": {
+                    "value": 10256
+                }
+            },
+            "cp_v_257": {
+                "minecraft:variant": {
+                    "value": 10257
+                }
+            },
+            "cp_v_258": {
+                "minecraft:variant": {
+                    "value": 10258
+                }
+            },
+            "cp_v_259": {
+                "minecraft:variant": {
+                    "value": 10259
+                }
+            },
+            "cp_v_260": {
+                "minecraft:variant": {
+                    "value": 10260
+                }
+            },
+            "cp_v_261": {
+                "minecraft:variant": {
+                    "value": 10261
+                }
+            },
+            "cp_v_262": {
+                "minecraft:variant": {
+                    "value": 10262
+                }
+            },
+            "cp_v_263": {
+                "minecraft:variant": {
+                    "value": 10263
+                }
+            },
+            "cp_v_264": {
+                "minecraft:variant": {
+                    "value": 10264
+                }
+            },
+            "cp_v_265": {
+                "minecraft:variant": {
+                    "value": 10265
+                }
+            },
+            "cp_v_266": {
+                "minecraft:variant": {
+                    "value": 10266
+                }
+            },
+            "cp_v_267": {
+                "minecraft:variant": {
+                    "value": 10267
+                }
+            },
+            "cp_v_268": {
+                "minecraft:variant": {
+                    "value": 10268
+                }
+            },
+            "cp_v_269": {
+                "minecraft:variant": {
+                    "value": 10269
+                }
+            },
+            "cp_v_270": {
+                "minecraft:variant": {
+                    "value": 10270
+                }
+            },
+            "cp_v_271": {
+                "minecraft:variant": {
+                    "value": 10271
+                }
+            },
+            "cp_v_272": {
+                "minecraft:variant": {
+                    "value": 10272
+                }
+            },
+            "cp_v_273": {
+                "minecraft:variant": {
+                    "value": 10273
+                }
+            },
+            "cp_v_274": {
+                "minecraft:variant": {
+                    "value": 10274
+                }
+            },
+            "cp_v_275": {
+                "minecraft:variant": {
+                    "value": 10275
+                }
+            },
+            "cp_v_276": {
+                "minecraft:variant": {
+                    "value": 10276
+                }
+            },
+            "cp_v_277": {
+                "minecraft:variant": {
+                    "value": 10277
+                }
+            },
+            "cp_v_278": {
+                "minecraft:variant": {
+                    "value": 10278
+                }
+            },
+            "cp_v_279": {
+                "minecraft:variant": {
+                    "value": 10279
+                }
+            },
+            "cp_v_280": {
+                "minecraft:variant": {
+                    "value": 10280
+                }
+            },
+            "cp_v_281": {
+                "minecraft:variant": {
+                    "value": 10281
+                }
+            },
+            "cp_v_282": {
+                "minecraft:variant": {
+                    "value": 10282
+                }
+            },
+            "cp_v_283": {
+                "minecraft:variant": {
+                    "value": 10283
+                }
+            },
+            "cp_v_284": {
+                "minecraft:variant": {
+                    "value": 10284
+                }
+            },
+            "cp_v_285": {
+                "minecraft:variant": {
+                    "value": 10285
+                }
+            },
+            "cp_v_286": {
+                "minecraft:variant": {
+                    "value": 10286
+                }
+            },
+            "cp_v_287": {
+                "minecraft:variant": {
+                    "value": 10287
+                }
+            },
+            "cp_v_288": {
+                "minecraft:variant": {
+                    "value": 10288
+                }
+            },
+            "cp_v_289": {
+                "minecraft:variant": {
+                    "value": 10289
+                }
+            },
+            "cp_v_290": {
+                "minecraft:variant": {
+                    "value": 10290
+                }
+            },
+            "cp_v_291": {
+                "minecraft:variant": {
+                    "value": 10291
+                }
+            },
+            "cp_v_292": {
+                "minecraft:variant": {
+                    "value": 10292
+                }
+            },
+            "cp_v_293": {
+                "minecraft:variant": {
+                    "value": 10293
+                }
+            },
+            "cp_v_294": {
+                "minecraft:variant": {
+                    "value": 10294
+                }
+            },
+            "cp_v_295": {
+                "minecraft:variant": {
+                    "value": 10295
+                }
+            },
+            "cp_v_296": {
+                "minecraft:variant": {
+                    "value": 10296
+                }
+            },
+            "cp_v_297": {
+                "minecraft:variant": {
+                    "value": 10297
+                }
+            },
+            "cp_v_298": {
+                "minecraft:variant": {
+                    "value": 10298
+                }
+            },
+            "cp_v_299": {
+                "minecraft:variant": {
+                    "value": 10299
+                }
+            }
+        },
+        "components": {
+            "minecraft:variant": {
+                "value": 10000
+            },
+            "minecraft:type_family": {
+                "family": [
+                    "mtc"
+                ]
+            },
+            "minecraft:collision_box": {
+                "width": 1.0,
+                "height": 1.0
+            },
+            "minecraft:physics": {},
+            "minecraft:pushable": {
+                "is_pushable": false
+            },
+            "minecraft:damage_sensor": {
+                "triggers": [
+                    {
+                        "cause": "entity_attack",
+                        "deals_damage": false
+                    },
+                    {
+                        "cause": "contact",
+                        "deals_damage": false,
+                        "damage_multipliers": {
+                            "fall": 0.0,
+                            "drowning": 0.0,
+                            "fire": 0.0,
+                            "lava": 0.0
+                        }
+                    }
+                ]
+            },
+            "minecraft:collision": {
+                "entity_collision_box": {
+                    "width": 1.5,
+                    "height": 1.5
+                },
+                "block_collision_box": {
+                    "width": 1.5,
+                    "height": 1.5
+                }
+            },
+            "minecraft:attack": {
+                "damage": 5,
+                "effect_name": "knockback",
+                "effect_duration": 0.2
+            }
+        },
+        "events": {}
+    }
+}
