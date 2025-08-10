@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Model Viewer</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input type="file" id="file-input" accept=".json">
+        <button id="generate-texture-btn">テクスチャを生成・ダウンロード</button>
+        <a id="download-link" style="display: none;">テクスチャをダウンロード</a>
+    </div>
+    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"></script>
+    <script type="module" src="3d-display.js"></script>
+    <script type="module" src="json-parser.js"></script>
+    <script type="module" src="texture-generator.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
