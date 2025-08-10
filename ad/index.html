@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>広告ゲームコレクション</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="game-title">Township</div>
+            
+            <div class="flex items-center">
+                <button class="addon-button" id="addonButton">⚙️アドオン</button>
+                <button class="warehouse-button" id="warehouseButton">📦</button>
+            </div>
+            
+            <div class="warehouse-dropdown" id="warehouseDropdown">
+                <div class="tab-buttons">
+                    <button id="warehouseTabBtn" class="active">倉庫</button>
+                    <button id="marketTabBtn">市場</button>
+                </div>
+                <div id="warehouseContent" class="tab-content active">
+                    <h3 class="text-lg font-bold">倉庫の在庫</h3>
+                    <div class="sort-options flex mb-2">
+                        <button onclick="sortItems('name')" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-2 py-1 text-sm">ABC順</button>
+                        <button onclick="sortItems('count')" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-2 py-1 text-sm">個数順</button>
+                    </div>
+                    <ul class="item-list" id="warehouseItemList"></ul>
+                    <p id="totalStored" class="mt-2 text-sm text-gray-700"></p>
+                </div>
+                <div id="marketContent" class="tab-content">
+                    <h3 class="text-lg font-bold">市場</h3>
+                    <ul class="item-list" id="marketItemList"></ul>
+                </div>
+            </div>
+
+            <div class="menu-dropdown">
+                <button class="menu-button">メニュー</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="changeGame('Township')">Township</a>
+                    <a href="#" onclick="changeGame('Whiteout Survival')">Whiteout Survival</a>
+                    <a href="#" onclick="changeGame('Puzzle Survival')">Puzzle Survival</a>
+                </div>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+    <input type="file" id="file-upload-input" accept=".pkadd">
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
+
