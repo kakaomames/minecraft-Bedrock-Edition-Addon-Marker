@@ -476,6 +476,7 @@
             userId = auth.currentUser?.uid || crypto.randomUUID();
             userIdDisplay.textContent = `User ID: ${userId}`;
 
+            // Create game objects and start animation only after authentication
             createPlayer();
             createFields();
             createWarehouse();
