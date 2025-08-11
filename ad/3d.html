@@ -73,13 +73,24 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
             margin-top: auto;
         }
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5vh;
+            z-index: 1000;
+        }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
 </head>
 <body>
+    <div id="loading-overlay">ロード中...</div>
     <div class="ui-overlay">
         <div class="header-ui">
             <div id="ui-container">
@@ -94,379 +105,409 @@
         <div id="userId-display"></div>
     </div>
     <div id="message-box"></div>
+
     <script type="module">
+        // Import Firebase modules first
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { Buffer } from "https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.js";
-        window.Buffer = Buffer;
-
-        // Firebase Configuration
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        let userId = null;
-        let isSaving = false;
-
-        // Game State
-        let player = { mesh: null, speed: 0.1, harvestAbility: 1 };
-        let gameState = { cash: 100, message: '', lastMessageTime: 0, lastAutoIncomeTime: Date.now() };
-        let fields = [];
-        let warehouse = { mesh: null, storedCrops: {} };
-        let workers = [];
-
-        // UI Elements
-        const cashDisplay = document.getElementById('cash-display');
-        const messageBox = document.getElementById('message-box');
-        const speedButton = document.getElementById('upgrade-speed');
-        const harvestButton = document.getElementById('upgrade-harvest');
-        const hireWorkerButton = document.getElementById('hire-worker');
-        const userIdDisplay = document.getElementById('userId-display');
-
-        // Three.js Scene Setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(renderer.domElement);
-
-        // Camera Controls
-        let isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
-        let touchTargetPosition = null;
-
-        const cameraPivot = new THREE.Object3D();
-        scene.add(cameraPivot);
-        cameraPivot.add(camera);
-        camera.position.set(0, 5, 10);
-        camera.lookAt(cameraPivot.position);
-
-        renderer.domElement.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            previousMousePosition.x = e.clientX;
-            previousMousePosition.y = e.clientY;
-        });
-
-        renderer.domElement.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        renderer.domElement.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaMove = {
-                x: e.clientX - previousMousePosition.x,
-                y: e.clientY - previousMousePosition.y
-            };
-            cameraPivot.rotation.y += deltaMove.x * 0.005;
-            cameraPivot.rotation.x += deltaMove.y * 0.005;
-            cameraPivot.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraPivot.rotation.x));
-            previousMousePosition = { x: e.clientX, y: e.clientY };
-        });
-
-        renderer.domElement.addEventListener('touchstart', (e) => {
-            if (e.target.tagName.toLowerCase() === 'button') return;
-            e.preventDefault();
-            touchTargetPosition = getIntersectionPoint(e.touches[0].clientX, e.touches[0].clientY);
-        });
-
-        renderer.domElement.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchTargetPosition = null;
-        });
         
-        function getIntersectionPoint(x, y) {
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            mouse.x = (x / window.innerWidth) * 2 - 1;
-            mouse.y = -(y / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(ground);
-            if (intersects.length > 0) {
-                return intersects[0].point;
-            }
-            return null;
-        }
-
-        // Keyboard Controls
-        const keys = {};
-        document.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-            if (e.key === 'e' || e.key === 'E' || e.key === ' ') {
-                harvestCrops();
-            }
-        });
-        document.addEventListener('keyup', (e) => keys[e.key] = false);
-
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 10, 7.5);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 1024;
-        directionalLight.shadow.mapSize.height = 1024;
-        directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 50;
-        scene.add(directionalLight);
-
-        // Ground
-        const groundGeometry = new THREE.PlaneGeometry(100, 100);
-        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x8FBC8F });
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        // Game Object Creation
-        function createPlayer() {
-            const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-            const material = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-            player.mesh = new THREE.Mesh(geometry, material);
-            player.mesh.position.set(0, 0.5, 0);
-            player.mesh.castShadow = true;
-            scene.add(player.mesh);
-        }
-
-        function createFields() {
-            for (let i = 0; i < 5; i++) {
-                const geometry = new THREE.BoxGeometry(2, 0.2, 2);
-                const material = new THREE.MeshStandardMaterial({ color: 0xC0A068 });
-                const fieldMesh = new THREE.Mesh(geometry, material);
-                fieldMesh.position.set(
-                    (Math.random() * 2 - 1) * 20,
-                    0.1,
-                    (Math.random() * 2 - 1) * 20
-                );
-                fieldMesh.castShadow = true;
-                scene.add(fieldMesh);
-
-                const cropGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-                const cropMaterial = new THREE.MeshStandardMaterial({ color: 0xDAA520 });
-                const cropMesh = new THREE.Mesh(cropGeometry, cropMaterial);
-                cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
-                cropMesh.castShadow = true;
-                scene.add(cropMesh);
-                cropMesh.visible = false;
-
-                fields.push({
-                    mesh: fieldMesh,
-                    cropMesh: cropMesh,
-                    isHarvestable: false,
-                    plantTime: Date.now()
-                });
-            }
-        }
-
-        function createWarehouse() {
-            const geometry = new THREE.BoxGeometry(4, 3, 4);
-            const material = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            warehouse.mesh = new THREE.Mesh(geometry, material);
-            warehouse.mesh.position.set(15, 1.5, 0);
-            warehouse.mesh.castShadow = true;
-            scene.add(warehouse.mesh);
-        }
-
-        function createDeliveryZone() {
-             const geometry = new THREE.PlaneGeometry(5, 5);
-             const material = new THREE.MeshBasicMaterial({ color: 0x00FF00, transparent: true, opacity: 0.3 });
-             const deliveryZoneMesh = new THREE.Mesh(geometry, material);
-             deliveryZoneMesh.rotation.x = -Math.PI / 2;
-             deliveryZoneMesh.position.set(-15, 0.01, 0);
-             scene.add(deliveryZoneMesh);
-        }
-
-        // UI Functions
-        function showMessage(text) {
-            gameState.message = text;
-            gameState.lastMessageTime = Date.now();
-            messageBox.textContent = text;
-            messageBox.style.opacity = 1;
-        }
-
-        // Game Logic
-        function updateGame() {
-            const move = { x: 0, y: 0 };
-            if (keys['w'] || keys['W'] || keys['ArrowUp']) move.y -= player.speed;
-            if (keys['s'] || keys['S'] || keys['ArrowDown']) move.y += player.speed;
-            if (keys['a'] || keys['A'] || keys['ArrowLeft']) move.x -= player.speed;
-            if (keys['d'] || keys['D'] || keys['ArrowRight']) move.x += player.speed;
-            
-            if (touchTargetPosition) {
-                const targetVec = new THREE.Vector3(touchTargetPosition.x, player.mesh.position.y, touchTargetPosition.z);
-                const distance = player.mesh.position.distanceTo(targetVec);
-                if (distance > 0.5) {
-                    const direction = targetVec.clone().sub(player.mesh.position).normalize();
-                    player.mesh.position.add(direction.multiplyScalar(player.speed));
-                }
-            } else {
-                const angle = cameraPivot.rotation.y;
-                const sin = Math.sin(angle);
-                const cos = Math.cos(angle);
-                const moveX = move.x * cos + move.y * sin;
-                const moveZ = -move.x * sin + move.y * cos;
-
-                player.mesh.position.x += moveX;
-                player.mesh.position.z += moveZ;
-            }
-            
-            const currentTime = Date.now();
-            fields.forEach(field => {
-                if (!field.isHarvestable && (currentTime - field.plantTime) > 30000) {
-                    field.isHarvestable = true;
-                    field.cropMesh.visible = true;
-                }
+        // Function to dynamically load a script and return a Promise
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+                document.head.appendChild(script);
             });
-
-            // Automatic Income
-            if (currentTime - gameState.lastAutoIncomeTime > 1000) {
-                gameState.cash += 1;
-                gameState.lastAutoIncomeTime = currentTime;
-                cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-            }
-            
-            if (Date.now() - gameState.lastMessageTime > 2000) {
-                messageBox.style.opacity = 0;
-            }
-        }
-        
-        function harvestCrops() {
-            let harvested = false;
-            fields.forEach(field => {
-                const distance = player.mesh.position.distanceTo(field.mesh.position);
-                if (distance < 2 && field.isHarvestable) {
-                    field.cropMesh.visible = false;
-                    field.isHarvestable = false;
-                    field.plantTime = Date.now();
-                    gameState.cash += 10;
-                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-                    showMessage(`作物を収穫しました！ +10 キャッシュ`);
-                    harvested = true;
-                    saveGame();
-                }
-            });
-            if (!harvested) {
-                showMessage('収穫できる作物がありません。');
-            }
         }
 
-        // Firestore Save/Load Logic
-        async function saveGame() {
-            if (!userId || isSaving) return;
-            isSaving = true;
+        let isInitialized = false;
+
+        async function setupGame() {
+            // Load three.js and Buffer dynamically
             try {
-                const gameRef = doc(db, `artifacts/${appId}/users/${userId}/gameData/data`);
-                const gameData = {
-                    cash: gameState.cash,
-                    playerSpeed: player.speed,
-                    playerHarvestAbility: player.harvestAbility,
-                    playerPos: new THREE.Vector3().copy(player.mesh.position).toArray(),
-                    fields: fields.map(f => ({
-                        position: new THREE.Vector3().copy(f.mesh.position).toArray(),
-                        isHarvestable: f.isHarvestable,
-                        plantTime: f.plantTime
-                    }))
-                };
-                await setDoc(gameRef, gameData);
-                console.log("Game saved successfully.");
-            } catch (e) {
-                console.error("Error saving game: ", e);
-            } finally {
-                isSaving = false;
-            }
-        }
-
-        async function loadGame() {
-            if (!userId) {
-                console.error("User not authenticated.");
+                await loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js");
+                await loadScript("https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.js");
+                window.Buffer = Buffer;
+            } catch (error) {
+                document.getElementById('loading-overlay').textContent = 'エラー: 必要なライブラリが読み込めません。ネットワーク接続を確認して再読み込みしてください。';
+                console.error(error);
                 return;
             }
-            try {
-                const gameRef = doc(db, `artifacts/${appId}/users/${userId}/gameData/data`);
-                const docSnap = await getDoc(gameRef);
 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    gameState.cash = data.cash;
-                    player.speed = data.playerSpeed;
-                    player.harvestAbility = data.playerHarvestAbility;
-                    player.mesh.position.fromArray(data.playerPos);
-
-                    data.fields.forEach((fieldData, index) => {
-                        if (fields[index]) {
-                            fields[index].mesh.position.fromArray(fieldData.position);
-                            fields[index].isHarvestable = fieldData.isHarvestable;
-                            fields[index].plantTime = fieldData.plantTime;
-                            fields[index].cropMesh.visible = fieldData.isHarvestable;
-                        }
-                    });
-
-                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-                    showMessage('ゲームデータを読み込みました！');
-                    console.log("Game loaded successfully.");
-                } else {
-                    console.log("No saved game data found. Starting a new game.");
-                }
-            } catch (e) {
-                console.error("Error loading game: ", e);
+            // Check if THREE is defined after loading
+            if (typeof THREE === 'undefined') {
+                document.getElementById('loading-overlay').textContent = 'エラー: Three.jsが正しく読み込まれませんでした。';
+                return;
             }
-        }
 
-        // Animation Loop
-        function animate() {
-            requestAnimationFrame(animate);
-            updateGame();
-            renderer.render(scene, camera);
-        }
+            // Firebase Configuration
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            let userId = null;
+            let isSaving = false;
 
-        // Window Resize Handler
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            // Game State
+            let player = { mesh: null, speed: 0.1, harvestAbility: 1 };
+            let gameState = { cash: 100, message: '', lastMessageTime: 0, lastAutoIncomeTime: Date.now() };
+            let fields = [];
+            let warehouse = { mesh: null, storedCrops: {} };
+            let workers = [];
+
+            // UI Elements
+            const cashDisplay = document.getElementById('cash-display');
+            const messageBox = document.getElementById('message-box');
+            const speedButton = document.getElementById('upgrade-speed');
+            const harvestButton = document.getElementById('upgrade-harvest');
+            const hireWorkerButton = document.getElementById('hire-worker');
+            const userIdDisplay = document.getElementById('userId-display');
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            // Three.js Scene Setup
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
 
-        // Button Event Listeners
-        speedButton.addEventListener('click', () => {
-            if (gameState.cash >= 10) {
-                gameState.cash -= 10;
-                player.speed += 0.05;
-                cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-                showMessage('移動速度がアップしました！');
-                saveGame();
-            } else {
-                showMessage('キャッシュが足りません！');
+            // Camera Controls
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            let touchTargetPosition = null;
+
+            const cameraPivot = new THREE.Object3D();
+            scene.add(cameraPivot);
+            cameraPivot.add(camera);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(cameraPivot.position);
+
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition.x = e.clientX;
+                previousMousePosition.y = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaMove = {
+                    x: e.clientX - previousMousePosition.x,
+                    y: e.clientY - previousMousePosition.y
+                };
+                cameraPivot.rotation.y += deltaMove.x * 0.005;
+                cameraPivot.rotation.x += deltaMove.y * 0.005;
+                cameraPivot.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraPivot.rotation.x));
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            renderer.domElement.addEventListener('touchstart', (e) => {
+                if (e.target.tagName.toLowerCase() === 'button') return;
+                e.preventDefault();
+                touchTargetPosition = getIntersectionPoint(e.touches[0].clientX, e.touches[0].clientY);
+            });
+
+            renderer.domElement.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touchTargetPosition = null;
+            });
+            
+            function getIntersectionPoint(x, y) {
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+                mouse.x = (x / window.innerWidth) * 2 - 1;
+                mouse.y = -(y / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(ground);
+                if (intersects.length > 0) {
+                    return intersects[0].point;
+                }
+                return null;
             }
-        });
 
-        harvestButton.addEventListener('click', () => {
-            if (gameState.cash >= 20) {
-                gameState.cash -= 20;
-                player.harvestAbility += 1;
-                cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-                showMessage('回収能力がアップしました！');
-                saveGame();
-            } else {
-                showMessage('キャッシュが足りません！');
+            // Keyboard Controls
+            const keys = {};
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+                if (e.key === 'e' || e.key === 'E' || e.key === ' ') {
+                    harvestCrops();
+                }
+            });
+            document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 10, 7.5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            scene.add(directionalLight);
+
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x8FBC8F });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Game Object Creation
+            function createPlayer() {
+                const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+                const material = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+                player.mesh = new THREE.Mesh(geometry, material);
+                player.mesh.position.set(0, 0.5, 0);
+                player.mesh.castShadow = true;
+                scene.add(player.mesh);
             }
-        });
 
-        hireWorkerButton.addEventListener('click', () => {
-             if (gameState.cash >= 50) {
-                gameState.cash -= 50;
-                showMessage('お手伝いさんを雇いました！');
-                cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-                saveGame();
-             } else {
-                 showMessage('キャッシュが足りません！');
-             }
-        });
-        
-        // Game Initialization
-        async function setupGame() {
+            function createFields() {
+                for (let i = 0; i < 5; i++) {
+                    const geometry = new THREE.BoxGeometry(2, 0.2, 2);
+                    const material = new THREE.MeshStandardMaterial({ color: 0xC0A068 });
+                    const fieldMesh = new THREE.Mesh(geometry, material);
+                    fieldMesh.position.set(
+                        (Math.random() * 2 - 1) * 20,
+                        0.1,
+                        (Math.random() * 2 - 1) * 20
+                    );
+                    fieldMesh.castShadow = true;
+                    scene.add(fieldMesh);
+
+                    const cropGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+                    const cropMaterial = new THREE.MeshStandardMaterial({ color: 0xDAA520 });
+                    const cropMesh = new THREE.Mesh(cropGeometry, cropMaterial);
+                    cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
+                    cropMesh.castShadow = true;
+                    scene.add(cropMesh);
+                    cropMesh.visible = false;
+
+                    fields.push({
+                        mesh: fieldMesh,
+                        cropMesh: cropMesh,
+                        isHarvestable: false,
+                        plantTime: Date.now()
+                    });
+                }
+            }
+
+            function createWarehouse() {
+                const geometry = new THREE.BoxGeometry(4, 3, 4);
+                const material = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+                warehouse.mesh = new THREE.Mesh(geometry, material);
+                warehouse.mesh.position.set(15, 1.5, 0);
+                warehouse.mesh.castShadow = true;
+                scene.add(warehouse.mesh);
+            }
+
+            function createDeliveryZone() {
+                const geometry = new THREE.PlaneGeometry(5, 5);
+                const material = new THREE.MeshBasicMaterial({ color: 0x00FF00, transparent: true, opacity: 0.3 });
+                const deliveryZoneMesh = new THREE.Mesh(geometry, material);
+                deliveryZoneMesh.rotation.x = -Math.PI / 2;
+                deliveryZoneMesh.position.set(-15, 0.01, 0);
+                scene.add(deliveryZoneMesh);
+            }
+
+            // UI Functions
+            function showMessage(text) {
+                gameState.message = text;
+                gameState.lastMessageTime = Date.now();
+                messageBox.textContent = text;
+                messageBox.style.opacity = 1;
+            }
+
+            // Game Logic
+            function updateGame() {
+                const move = { x: 0, y: 0 };
+                if (keys['w'] || keys['W'] || keys['ArrowUp']) move.y -= player.speed;
+                if (keys['s'] || keys['S'] || keys['ArrowDown']) move.y += player.speed;
+                if (keys['a'] || keys['A'] || keys['ArrowLeft']) move.x -= player.speed;
+                if (keys['d'] || keys['D'] || keys['ArrowRight']) move.x += player.speed;
+                
+                if (touchTargetPosition) {
+                    const targetVec = new THREE.Vector3(touchTargetPosition.x, player.mesh.position.y, touchTargetPosition.z);
+                    const distance = player.mesh.position.distanceTo(targetVec);
+                    if (distance > 0.5) {
+                        const direction = targetVec.clone().sub(player.mesh.position).normalize();
+                        player.mesh.position.add(direction.multiplyScalar(player.speed));
+                    }
+                } else {
+                    const angle = cameraPivot.rotation.y;
+                    const sin = Math.sin(angle);
+                    const cos = Math.cos(angle);
+                    const moveX = move.x * cos + move.y * sin;
+                    const moveZ = -move.x * sin + move.y * cos;
+
+                    player.mesh.position.x += moveX;
+                    player.mesh.position.z += moveZ;
+                }
+                
+                const currentTime = Date.now();
+                fields.forEach(field => {
+                    if (!field.isHarvestable && (currentTime - field.plantTime) > 30000) {
+                        field.isHarvestable = true;
+                        field.cropMesh.visible = true;
+                    }
+                });
+
+                // Automatic Income
+                if (currentTime - gameState.lastAutoIncomeTime > 1000) {
+                    gameState.cash += 1;
+                    gameState.lastAutoIncomeTime = currentTime;
+                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                }
+                
+                if (Date.now() - gameState.lastMessageTime > 2000) {
+                    messageBox.style.opacity = 0;
+                }
+            }
+            
+            function harvestCrops() {
+                let harvested = false;
+                fields.forEach(field => {
+                    const distance = player.mesh.position.distanceTo(field.mesh.position);
+                    if (distance < 2 && field.isHarvestable) {
+                        field.cropMesh.visible = false;
+                        field.isHarvestable = false;
+                        field.plantTime = Date.now();
+                        gameState.cash += 10;
+                        cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                        showMessage(`作物を収穫しました！ +10 キャッシュ`);
+                        harvested = true;
+                        saveGame();
+                    }
+                });
+                if (!harvested) {
+                    showMessage('収穫できる作物がありません。');
+                }
+            }
+
+            // Firestore Save/Load Logic
+            async function saveGame() {
+                if (!userId || isSaving) return;
+                isSaving = true;
+                try {
+                    const gameRef = doc(db, `artifacts/${appId}/users/${userId}/gameData/data`);
+                    const gameData = {
+                        cash: gameState.cash,
+                        playerSpeed: player.speed,
+                        playerHarvestAbility: player.harvestAbility,
+                        playerPos: new THREE.Vector3().copy(player.mesh.position).toArray(),
+                        fields: fields.map(f => ({
+                            position: new THREE.Vector3().copy(f.mesh.position).toArray(),
+                            isHarvestable: f.isHarvestable,
+                            plantTime: f.plantTime
+                        }))
+                    };
+                    await setDoc(gameRef, gameData);
+                    console.log("Game saved successfully.");
+                } catch (e) {
+                    console.error("Error saving game: ", e);
+                } finally {
+                    isSaving = false;
+                }
+            }
+
+            async function loadGame() {
+                if (!userId) {
+                    console.error("User not authenticated.");
+                    return;
+                }
+                try {
+                    const gameRef = doc(db, `artifacts/${appId}/users/${userId}/gameData/data`);
+                    const docSnap = await getDoc(gameRef);
+
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        gameState.cash = data.cash;
+                        player.speed = data.playerSpeed;
+                        player.harvestAbility = data.playerHarvestAbility;
+                        player.mesh.position.fromArray(data.playerPos);
+
+                        data.fields.forEach((fieldData, index) => {
+                            if (fields[index]) {
+                                fields[index].mesh.position.fromArray(fieldData.position);
+                                fields[index].isHarvestable = fieldData.isHarvestable;
+                                fields[index].plantTime = fieldData.plantTime;
+                                fields[index].cropMesh.visible = fieldData.isHarvestable;
+                            }
+                        });
+
+                        cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                        showMessage('ゲームデータを読み込みました！');
+                        console.log("Game loaded successfully.");
+                    } else {
+                        console.log("No saved game data found. Starting a new game.");
+                    }
+                } catch (e) {
+                    console.error("Error loading game: ", e);
+                }
+            }
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                updateGame();
+                renderer.render(scene, camera);
+            }
+
+            // Window Resize Handler
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Button Event Listeners
+            speedButton.addEventListener('click', () => {
+                if (gameState.cash >= 10) {
+                    gameState.cash -= 10;
+                    player.speed += 0.05;
+                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                    showMessage('移動速度がアップしました！');
+                    saveGame();
+                } else {
+                    showMessage('キャッシュが足りません！');
+                }
+            });
+
+            harvestButton.addEventListener('click', () => {
+                if (gameState.cash >= 20) {
+                    gameState.cash -= 20;
+                    player.harvestAbility += 1;
+                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                    showMessage('回収能力がアップしました！');
+                    saveGame();
+                } else {
+                    showMessage('キャッシュが足りません！');
+                }
+            });
+
+            hireWorkerButton.addEventListener('click', () => {
+                if (gameState.cash >= 50) {
+                    gameState.cash -= 50;
+                    showMessage('お手伝いさんを雇いました！');
+                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                    saveGame();
+                } else {
+                    showMessage('キャッシュが足りません！');
+                }
+            });
+
             const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             if (initialToken) {
                 await signInWithCustomToken(auth, initialToken);
@@ -484,9 +525,15 @@
             
             await loadGame();
             animate();
+
+            // Hide the loading overlay after everything is set up
+            loadingOverlay.style.display = 'none';
         }
 
-        window.onload = setupGame;
+        if (!isInitialized) {
+            setupGame();
+            isInitialized = true;
+        }
     </script>
 </body>
 </html>
