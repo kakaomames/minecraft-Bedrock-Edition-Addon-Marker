@@ -95,6 +95,7 @@
         <div class="header-ui">
             <div id="ui-container">
                 <div id="cash-display">キャッシュ: 0</div>
+                <div id="collected-crops">手持ち: なし</div>
             </div>
             <div id="buttons-container">
                 <button id="upgrade-speed" class="ui-button">移動速度UP</button>
@@ -107,11 +108,6 @@
     <div id="message-box"></div>
 
     <script type="module">
-        // Import Firebase modules first
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
         // Function to dynamically load a script and return a Promise
         function loadScript(url) {
             return new Promise((resolve, reject) => {
@@ -124,43 +120,38 @@
         }
 
         let isInitialized = false;
-
+        
         async function setupGame() {
-            // Load three.js and Buffer dynamically
             try {
                 await loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js");
-                await loadScript("https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.js");
-                window.Buffer = Buffer;
             } catch (error) {
-                document.getElementById('loading-overlay').textContent = 'エラー: 必要なライブラリが読み込めません。ネットワーク接続を確認して再読み込みしてください。';
+                document.getElementById('loading-overlay').textContent = 'エラー: Three.jsが読み込めません。ネットワーク接続を確認して再読み込みしてください。';
                 console.error(error);
                 return;
             }
 
-            // Check if THREE is defined after loading
             if (typeof THREE === 'undefined') {
                 document.getElementById('loading-overlay').textContent = 'エラー: Three.jsが正しく読み込まれませんでした。';
                 return;
             }
-
-            // Firebase Configuration
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth(app);
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            let userId = null;
-            let isSaving = false;
-
+            
             // Game State
-            let player = { mesh: null, speed: 0.1, harvestAbility: 1 };
+            let userId = 'kakaomames'; // GitHubのユーザー名として仮定
+            let isSaving = false;
+            let player = { mesh: null, speed: 0.1, harvestAbility: 1, collected: null, collectedMesh: null };
             let gameState = { cash: 100, message: '', lastMessageTime: 0, lastAutoIncomeTime: Date.now() };
             let fields = [];
             let warehouse = { mesh: null, storedCrops: {} };
             let workers = [];
+            const cropTypes = [
+                { name: 'Wheat', color: 0xDAA520, value: 10 },
+                { name: 'Corn', color: 0xFAD02C, value: 15 },
+                { name: 'Pumpkin', color: 0xFF7518, value: 25 }
+            ];
 
             // UI Elements
             const cashDisplay = document.getElementById('cash-display');
+            const collectedCropsDisplay = document.getElementById('collected-crops');
             const messageBox = document.getElementById('message-box');
             const speedButton = document.getElementById('upgrade-speed');
             const harvestButton = document.getElementById('upgrade-harvest');
@@ -239,7 +230,11 @@
             document.addEventListener('keydown', (e) => {
                 keys[e.key] = true;
                 if (e.key === 'e' || e.key === 'E' || e.key === ' ') {
-                    harvestCrops();
+                    if (player.collected) {
+                        depositCrops();
+                    } else {
+                        harvestCrops();
+                    }
                 }
             });
             document.addEventListener('keyup', (e) => keys[e.key] = false);
@@ -286,9 +281,10 @@
                     );
                     fieldMesh.castShadow = true;
                     scene.add(fieldMesh);
-
+                    
+                    const randomCrop = cropTypes[Math.floor(Math.random() * cropTypes.length)];
                     const cropGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-                    const cropMaterial = new THREE.MeshStandardMaterial({ color: 0xDAA520 });
+                    const cropMaterial = new THREE.MeshStandardMaterial({ color: randomCrop.color });
                     const cropMesh = new THREE.Mesh(cropGeometry, cropMaterial);
                     cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
                     cropMesh.castShadow = true;
@@ -299,9 +295,22 @@
                         mesh: fieldMesh,
                         cropMesh: cropMesh,
                         isHarvestable: false,
-                        plantTime: Date.now()
+                        plantTime: Date.now(),
+                        cropType: randomCrop.name,
+                        value: randomCrop.value
                     });
                 }
+            }
+            
+            function createWorker(position) {
+                const geometry = new THREE.ConeGeometry(0.4, 0.8, 8);
+                const material = new THREE.MeshStandardMaterial({ color: 0x8A2BE2 });
+                const workerMesh = new THREE.Mesh(geometry, material);
+                workerMesh.position.copy(position);
+                workerMesh.position.y = 0.4;
+                workerMesh.castShadow = true;
+                scene.add(workerMesh);
+                workers.push({ mesh: workerMesh, targetField: null, lastHarvestTime: Date.now() });
             }
 
             function createWarehouse() {
@@ -314,12 +323,12 @@
             }
 
             function createDeliveryZone() {
-                const geometry = new THREE.PlaneGeometry(5, 5);
-                const material = new THREE.MeshBasicMaterial({ color: 0x00FF00, transparent: true, opacity: 0.3 });
-                const deliveryZoneMesh = new THREE.Mesh(geometry, material);
-                deliveryZoneMesh.rotation.x = -Math.PI / 2;
-                deliveryZoneMesh.position.set(-15, 0.01, 0);
-                scene.add(deliveryZoneMesh);
+                 const geometry = new THREE.PlaneGeometry(5, 5);
+                 const material = new THREE.MeshBasicMaterial({ color: 0x00FF00, transparent: true, opacity: 0.3 });
+                 const deliveryZoneMesh = new THREE.Mesh(geometry, material);
+                 deliveryZoneMesh.rotation.x = -Math.PI / 2;
+                 deliveryZoneMesh.position.set(-15, 0.01, 0);
+                 scene.add(deliveryZoneMesh);
             }
 
             // UI Functions
@@ -355,12 +364,43 @@
                     player.mesh.position.x += moveX;
                     player.mesh.position.z += moveZ;
                 }
+
+                if (player.collectedMesh) {
+                    player.collectedMesh.position.copy(player.mesh.position);
+                    player.collectedMesh.position.y += 1.5;
+                }
                 
                 const currentTime = Date.now();
                 fields.forEach(field => {
-                    if (!field.isHarvestable && (currentTime - field.plantTime) > 30000) {
+                    if (!field.isHarvestable && (currentTime - field.plantTime) > 10000) {
                         field.isHarvestable = true;
                         field.cropMesh.visible = true;
+                    }
+                });
+
+                // Worker Logic
+                workers.forEach(worker => {
+                    if (!worker.targetField || !worker.targetField.isHarvestable) {
+                        worker.targetField = fields.find(f => f.isHarvestable);
+                    }
+
+                    if (worker.targetField) {
+                        const targetPos = worker.targetField.mesh.position;
+                        const direction = new THREE.Vector3().subVectors(targetPos, worker.mesh.position).normalize();
+                        worker.mesh.position.add(direction.multiplyScalar(0.05));
+                        
+                        if (worker.mesh.position.distanceTo(targetPos) < 1.5) {
+                            if (currentTime - worker.lastHarvestTime > 1000) {
+                                worker.targetField.isHarvestable = false;
+                                worker.targetField.cropMesh.visible = false;
+                                worker.targetField.plantTime = currentTime;
+                                gameState.cash += worker.targetField.value;
+                                cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                                showMessage('お手伝いさんが作物を収穫しました！');
+                                saveGame();
+                                worker.lastHarvestTime = currentTime;
+                            }
+                        }
                     }
                 });
 
@@ -377,18 +417,28 @@
             }
             
             function harvestCrops() {
+                if (player.collected) {
+                    showMessage('手持ちがいっぱいです。倉庫に運んでください。');
+                    return;
+                }
+                
                 let harvested = false;
                 fields.forEach(field => {
                     const distance = player.mesh.position.distanceTo(field.mesh.position);
                     if (distance < 2 && field.isHarvestable) {
                         field.cropMesh.visible = false;
                         field.isHarvestable = false;
+                        player.collected = field.cropType;
+                        collectedCropsDisplay.textContent = `手持ち: ${player.collected}`;
+                        
+                        const cropGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+                        const cropMaterial = new THREE.MeshStandardMaterial({ color: field.cropMesh.material.color });
+                        player.collectedMesh = new THREE.Mesh(cropGeometry, cropMaterial);
+                        scene.add(player.collectedMesh);
+                        
                         field.plantTime = Date.now();
-                        gameState.cash += 10;
-                        cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
-                        showMessage(`作物を収穫しました！ +10 キャッシュ`);
+                        showMessage(`${player.collected}を収穫しました！`);
                         harvested = true;
-                        saveGame();
                     }
                 });
                 if (!harvested) {
@@ -396,13 +446,33 @@
                 }
             }
 
-            // Firestore Save/Load Logic
+            function depositCrops() {
+                const distance = player.mesh.position.distanceTo(warehouse.mesh.position);
+                if (distance < 4 && player.collected) {
+                    const crop = cropTypes.find(c => c.name === player.collected);
+                    gameState.cash += crop.value;
+                    cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                    showMessage(`${crop.name}を売却しました！ +${crop.value} キャッシュ`);
+                    
+                    scene.remove(player.collectedMesh);
+                    player.collectedMesh = null;
+                    player.collected = null;
+                    collectedCropsDisplay.textContent = `手持ち: なし`;
+                    saveGame();
+                } else if (player.collected) {
+                    showMessage('倉庫の近くで売却してください。');
+                } else {
+                    showMessage('手持ちに作物がありません。');
+                }
+            }
+
+
+            // GitHub Save/Load Logic
             async function saveGame() {
-                if (!userId || isSaving) return;
+                if (isSaving) return;
                 isSaving = true;
                 try {
-                    const gameRef = doc(db, `artifacts/${appId}/users/${userId}/gameData/data`);
-                    const gameData = {
+                    const gameData = JSON.stringify({
                         cash: gameState.cash,
                         playerSpeed: player.speed,
                         playerHarvestAbility: player.harvestAbility,
@@ -410,11 +480,31 @@
                         fields: fields.map(f => ({
                             position: new THREE.Vector3().copy(f.mesh.position).toArray(),
                             isHarvestable: f.isHarvestable,
-                            plantTime: f.plantTime
+                            plantTime: f.plantTime,
+                            cropType: f.cropType,
+                            value: f.value
                         }))
+                    });
+                    
+                    const payload = {
+                        username: userId,
+                        gameData: gameData
                     };
-                    await setDoc(gameRef, gameData);
-                    console.log("Game saved successfully.");
+
+                    const response = await fetch('/git', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        console.log("Game saved to GitHub successfully.");
+                    } else {
+                        console.error("Error saving game:", await response.json());
+                    }
+
                 } catch (e) {
                     console.error("Error saving game: ", e);
                 } finally {
@@ -423,16 +513,12 @@
             }
 
             async function loadGame() {
-                if (!userId) {
-                    console.error("User not authenticated.");
-                    return;
-                }
                 try {
-                    const gameRef = doc(db, `artifacts/${appId}/users/${userId}/gameData/data`);
-                    const docSnap = await getDoc(gameRef);
+                    const dataUrl = `https://kakaomames.github.io/minecraft-Bedrock-Edition-Addon-Marker/ad/game/data/${userId}.json`;
+                    const response = await fetch(dataUrl);
 
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
+                    if (response.ok) {
+                        const data = await response.json();
                         gameState.cash = data.cash;
                         player.speed = data.playerSpeed;
                         player.harvestAbility = data.playerHarvestAbility;
@@ -498,26 +584,22 @@
             });
 
             hireWorkerButton.addEventListener('click', () => {
-                if (gameState.cash >= 50) {
+                 if (gameState.cash >= 50) {
                     gameState.cash -= 50;
+                    const randomPosition = new THREE.Vector3(
+                        (Math.random() * 2 - 1) * 20, 0, (Math.random() * 2 - 1) * 20
+                    );
+                    createWorker(randomPosition);
                     showMessage('お手伝いさんを雇いました！');
                     cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
                     saveGame();
-                } else {
-                    showMessage('キャッシュが足りません！');
-                }
+                 } else {
+                     showMessage('キャッシュが足りません！');
+                 }
             });
-
-            const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-            if (initialToken) {
-                await signInWithCustomToken(auth, initialToken);
-            } else {
-                await signInAnonymously(auth);
-            }
-            userId = auth.currentUser?.uid || crypto.randomUUID();
+            
             userIdDisplay.textContent = `User ID: ${userId}`;
 
-            // Create game objects and start animation only after authentication
             createPlayer();
             createFields();
             createWarehouse();
@@ -526,7 +608,6 @@
             await loadGame();
             animate();
 
-            // Hide the loading overlay after everything is set up
             loadingOverlay.style.display = 'none';
         }
 
