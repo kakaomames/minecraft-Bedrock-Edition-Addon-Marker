@@ -169,57 +169,43 @@
             document.body.appendChild(renderer.domElement);
 
             // Camera Controls
-            let isDragging = false;
-            let previousMousePosition = { x: 0, y: 0 };
-            let touchTargetPosition = null;
-
-            renderer.domElement.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                previousMousePosition.x = e.clientX;
-                previousMousePosition.y = e.clientY;
-            });
-
-            renderer.domElement.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-
-            renderer.domElement.addEventListener('mousemove', (e) => {
-                if (!isDragging || !player.mesh) return;
-                const deltaMove = {
-                    x: e.clientX - previousMousePosition.x,
-                    y: e.clientY - previousMousePosition.y
-                };
-                player.mesh.rotation.y += deltaMove.x * 0.005;
-                camera.position.x += deltaMove.x * 0.01;
-                camera.position.y -= deltaMove.y * 0.01;
-                
-                previousMousePosition = { x: e.clientX, y: e.clientY };
-            });
+            let touchDragVector = new THREE.Vector2(0, 0);
+            let touchStartPoint = null;
 
             renderer.domElement.addEventListener('touchstart', (e) => {
                 if (e.target.tagName.toLowerCase() === 'button') return;
                 e.preventDefault();
-                touchTargetPosition = getIntersectionPoint(e.touches[0].clientX, e.touches[0].clientY);
+                touchStartPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            });
+
+            renderer.domElement.addEventListener('touchmove', (e) => {
+                if (!touchStartPoint) return;
+                e.preventDefault();
+                const deltaX = e.touches[0].clientX - touchStartPoint.x;
+                const deltaY = e.touches[0].clientY - touchStartPoint.y;
+
+                const sensitivity = 0.05;
+                touchDragVector.x = deltaX * sensitivity;
+                touchDragVector.y = deltaY * sensitivity;
+
+                // Restrict drag vector length
+                if (touchDragVector.length() > 1) {
+                    touchDragVector.normalize();
+                }
+
+                // Smoothly reset drag vector after a short delay
+                clearTimeout(touchResetTimer);
+                touchResetTimer = setTimeout(() => {
+                    touchDragVector.set(0, 0);
+                }, 100);
+
             });
 
             renderer.domElement.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                touchTargetPosition = null;
+                touchStartPoint = null;
+                touchDragVector.set(0, 0);
             });
             
-            function getIntersectionPoint(x, y) {
-                const raycaster = new THREE.Raycaster();
-                const mouse = new THREE.Vector2();
-                mouse.x = (x / window.innerWidth) * 2 - 1;
-                mouse.y = -(y / window.innerHeight) * 2 + 1;
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObject(ground);
-                if (intersects.length > 0) {
-                    return intersects[0].point;
-                }
-                return null;
-            }
-
             // Keyboard Controls
             const keys = {};
             document.addEventListener('keydown', (e) => {
@@ -465,20 +451,21 @@
 
             // Game Logic
             function updateGame() {
-                const move = { x: 0, z: 0 };
-                if (keys['w'] || keys['W'] || keys['ArrowUp']) move.z -= player.speed;
-                if (keys['s'] || keys['S'] || keys['ArrowDown']) move.z += player.speed;
-                if (keys['a'] || keys['A'] || keys['ArrowLeft']) move.x -= player.speed;
-                if (keys['d'] || keys['D'] || keys['ArrowRight']) move.x += player.speed;
+                const move = new THREE.Vector3();
 
-                if (touchTargetPosition) {
-                    const targetVec = new THREE.Vector3(touchTargetPosition.x, player.mesh.position.y, touchTargetPosition.z);
-                    const distance = player.mesh.position.distanceTo(targetVec);
-                    if (distance > 0.5) {
-                        const direction = targetVec.clone().sub(player.mesh.position).normalize();
-                        player.mesh.position.add(direction.multiplyScalar(player.speed));
-                    }
+                // Check for keyboard input if there's no touch input
+                if (touchDragVector.length() === 0) {
+                    if (keys['w'] || keys['W'] || keys['ArrowUp']) move.z -= player.speed;
+                    if (keys['s'] || keys['S'] || keys['ArrowDown']) move.z += player.speed;
+                    if (keys['a'] || keys['A'] || keys['ArrowLeft']) move.x -= player.speed;
+                    if (keys['d'] || keys['D'] || keys['ArrowRight']) move.x += player.speed;
                 } else {
+                    // Use touch drag vector for movement
+                    move.x = touchDragVector.x * player.speed;
+                    move.z = touchDragVector.y * player.speed;
+                }
+
+                if (move.length() > 0) {
                     const direction = new THREE.Vector3(move.x, 0, move.z);
                     direction.applyQuaternion(player.mesh.quaternion);
                     player.mesh.position.add(direction);
