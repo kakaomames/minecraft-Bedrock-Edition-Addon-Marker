@@ -256,11 +256,54 @@
 
             // Game Object Creation
             function createPlayer() {
-                const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-                const material = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-                player.mesh = new THREE.Mesh(geometry, material);
+                // Main player group
+                player.mesh = new THREE.Group();
+
+                // Body
+                const bodyGeometry = new THREE.BoxGeometry(0.5, 0.8, 0.3);
+                const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.position.y = 0.4;
+                body.castShadow = true;
+                player.mesh.add(body);
+
+                // Head
+                const headGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+                const headMaterial = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
+                const head = new THREE.Mesh(headGeometry, headMaterial);
+                head.position.y = 0.9;
+                head.castShadow = true;
+                player.mesh.add(head);
+
+                // Left Arm
+                const armGeometry = new THREE.BoxGeometry(0.15, 0.6, 0.15);
+                const armMaterial = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
+                const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+                leftArm.position.set(-0.325, 0.4, 0);
+                leftArm.castShadow = true;
+                player.mesh.add(leftArm);
+
+                // Right Arm
+                const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+                rightArm.position.set(0.325, 0.4, 0);
+                rightArm.castShadow = true;
+                player.mesh.add(rightArm);
+
+                // Left Leg
+                const legGeometry = new THREE.BoxGeometry(0.15, 0.7, 0.15);
+                const legMaterial = new THREE.MeshStandardMaterial({ color: 0x00008b });
+                const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+                leftLeg.position.set(-0.125, -0.25, 0);
+                leftLeg.castShadow = true;
+                player.mesh.add(leftLeg);
+
+                // Right Leg
+                const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+                rightLeg.position.set(0.125, -0.25, 0);
+                rightLeg.castShadow = true;
+                player.mesh.add(rightLeg);
+
                 player.mesh.position.set(0, 0.5, 0);
-                player.mesh.castShadow = true;
                 scene.add(player.mesh);
 
                 // Attach the camera to the player mesh
@@ -268,6 +311,68 @@
                 camera.position.set(0, 5, 10);
                 camera.lookAt(player.mesh.position);
             }
+
+            function createCropMesh(cropType) {
+                const group = new THREE.Group();
+                let cropColor;
+
+                switch (cropType) {
+                    case 'Wheat':
+                        cropColor = 0xDAA520;
+                        // Stem
+                        const stemGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
+                        const stemMaterial = new THREE.MeshStandardMaterial({ color: 0x556B2F });
+                        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+                        stem.position.y = 0.25;
+                        group.add(stem);
+                        
+                        // Head
+                        const headGeometry = new THREE.ConeGeometry(0.1, 0.3, 4);
+                        const headMaterial = new THREE.MeshStandardMaterial({ color: cropColor });
+                        const head = new THREE.Mesh(headGeometry, headMaterial);
+                        head.position.y = 0.6;
+                        group.add(head);
+                        break;
+                    case 'Corn':
+                        cropColor = 0xFAD02C;
+                         // Stalk
+                        const stalkGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.8, 8);
+                        const stalkMaterial = new THREE.MeshStandardMaterial({ color: 0x556B2F });
+                        const stalk = new THREE.Mesh(stalkGeometry, stalkMaterial);
+                        stalk.position.y = 0.4;
+                        group.add(stalk);
+
+                        // Corn on the cob
+                        const cornGeometry = new THREE.CylinderGeometry(0.12, 0.12, 0.4, 16);
+                        const cornMaterial = new THREE.MeshStandardMaterial({ color: cropColor });
+                        const corn = new THREE.Mesh(cornGeometry, cornMaterial);
+                        corn.position.y = 0.6;
+                        corn.rotation.x = Math.PI / 2;
+                        group.add(corn);
+                        break;
+                    case 'Pumpkin':
+                        cropColor = 0xFF7518;
+                        // Pumpkin body
+                        const pumpkinGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+                        const pumpkinMaterial = new THREE.MeshStandardMaterial({ color: cropColor });
+                        const pumpkin = new THREE.Mesh(pumpkinGeometry, pumpkinMaterial);
+                        pumpkin.position.y = 0.3;
+                        group.add(pumpkin);
+
+                        // Stem
+                        const stemGeometryP = new THREE.CylinderGeometry(0.05, 0.05, 0.2, 8);
+                        const stemMaterialP = new THREE.MeshStandardMaterial({ color: 0x556B2F });
+                        const stemP = new THREE.Mesh(stemGeometryP, stemMaterialP);
+                        stemP.position.y = 0.5;
+                        group.add(stemP);
+                        break;
+                }
+                
+                group.castShadow = true;
+                group.receiveShadow = true;
+                return group;
+            }
+
 
             function createFields() {
                 for (let i = 0; i < 5; i++) {
@@ -283,11 +388,8 @@
                     scene.add(fieldMesh);
                     
                     const randomCrop = cropTypes[Math.floor(Math.random() * cropTypes.length)];
-                    const cropGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-                    const cropMaterial = new THREE.MeshStandardMaterial({ color: randomCrop.color });
-                    const cropMesh = new THREE.Mesh(cropGeometry, cropMaterial);
+                    const cropMesh = createCropMesh(randomCrop.name);
                     cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
-                    cropMesh.castShadow = true;
                     scene.add(cropMesh);
                     cropMesh.visible = false;
 
@@ -314,11 +416,33 @@
             }
 
             function createWarehouse() {
-                const geometry = new THREE.BoxGeometry(4, 3, 4);
-                const material = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-                warehouse.mesh = new THREE.Mesh(geometry, material);
-                warehouse.mesh.position.set(15, 1.5, 0);
-                warehouse.mesh.castShadow = true;
+                warehouse.mesh = new THREE.Group();
+
+                // Main body
+                const bodyGeometry = new THREE.BoxGeometry(4, 3, 4);
+                const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.position.y = 1.5;
+                body.castShadow = true;
+                warehouse.mesh.add(body);
+
+                // Roof
+                const roofGeometry = new THREE.ConeGeometry(3, 2, 4);
+                const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xA52A2A });
+                const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                roof.position.y = 3.5;
+                roof.rotation.y = Math.PI / 4;
+                roof.castShadow = true;
+                warehouse.mesh.add(roof);
+
+                // Door
+                const doorGeometry = new THREE.BoxGeometry(1, 1.5, 0.1);
+                const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x5C4033 });
+                const door = new THREE.Mesh(doorGeometry, doorMaterial);
+                door.position.set(0, 0.75, 2.01);
+                warehouse.mesh.add(door);
+
+                warehouse.mesh.position.set(15, 0, 0);
                 scene.add(warehouse.mesh);
             }
 
@@ -426,9 +550,8 @@
                         player.collected = field.cropType;
                         collectedCropsDisplay.textContent = `手持ち: ${player.collected}`;
                         
-                        const cropGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-                        const cropMaterial = new THREE.MeshStandardMaterial({ color: field.cropMesh.material.color });
-                        player.collectedMesh = new THREE.Mesh(cropGeometry, cropMaterial);
+                        // Create a new mesh for the collected crop
+                        player.collectedMesh = createCropMesh(player.collected);
                         scene.add(player.collectedMesh);
                         
                         field.plantTime = Date.now();
@@ -519,17 +642,38 @@
                         gameState.cash = data.cash;
                         player.speed = data.playerSpeed;
                         player.harvestAbility = data.playerHarvestAbility;
+                        
+                        // Set the player's position
                         player.mesh.position.fromArray(data.playerPos);
 
-                        data.fields.forEach((fieldData, index) => {
-                            if (fields[index]) {
-                                fields[index].mesh.position.fromArray(fieldData.position);
-                                fields[index].isHarvestable = fieldData.isHarvestable;
-                                fields[index].plantTime = fieldData.plantTime;
-                                fields[index].cropMesh.visible = fieldData.isHarvestable;
-                            }
+                        // Remove old fields and create new ones based on loaded data
+                        fields.forEach(field => {
+                            scene.remove(field.mesh);
+                            scene.remove(field.cropMesh);
                         });
+                        fields = [];
 
+                        data.fields.forEach(fieldData => {
+                            const fieldMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.2, 2), new THREE.MeshStandardMaterial({ color: 0xC0A068 }));
+                            fieldMesh.position.fromArray(fieldData.position);
+                            fieldMesh.receiveShadow = true;
+                            scene.add(fieldMesh);
+
+                            const cropMesh = createCropMesh(fieldData.cropType);
+                            cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
+                            scene.add(cropMesh);
+                            cropMesh.visible = fieldData.isHarvestable;
+
+                            fields.push({
+                                mesh: fieldMesh,
+                                cropMesh: cropMesh,
+                                isHarvestable: fieldData.isHarvestable,
+                                plantTime: fieldData.plantTime,
+                                cropType: fieldData.cropType,
+                                value: fieldData.value
+                            });
+                        });
+                        
                         cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
                         showMessage('ゲームデータを読み込みました！');
                         console.log("Game loaded successfully.");
