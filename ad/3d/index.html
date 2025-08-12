@@ -87,6 +87,49 @@
             font-size: 5vh;
             z-index: 1000;
         }
+        #joystick-outer {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            width: 15vh;
+            height: 15vh;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+        #joystick-inner {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            width: 6vh;
+            height: 6vh;
+            pointer-events: none;
+        }
+        #action-button {
+            position: absolute;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            padding: 2vh 4vw;
+            font-size: 3vh;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateX(-50%) translateY(200%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #action-button.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
@@ -101,12 +144,19 @@
                 <button id="upgrade-speed" class="ui-button">移動速度UP</button>
                 <button id="upgrade-harvest" class="ui-button">回収能力UP</button>
                 <button id="hire-worker" class="ui-button">お手伝いさんを雇う</button>
+                <button id="save-game" class="ui-button">ゲームをセーブ</button>
+                <button id="export-game" class="ui-button">データをエクスポート</button>
+                <input type="file" id="import-file" style="display: none;">
+                <button id="import-game" class="ui-button">データをインポート</button>
             </div>
         </div>
         <div id="userId-display"></div>
+        <button id="action-button"></button>
     </div>
     <div id="message-box"></div>
-
+    <div id="joystick-outer">
+        <div id="joystick-inner"></div>
+    </div>
     <script type="module">
         // Function to dynamically load a script and return a Promise
         function loadScript(url) {
@@ -156,8 +206,15 @@
             const speedButton = document.getElementById('upgrade-speed');
             const harvestButton = document.getElementById('upgrade-harvest');
             const hireWorkerButton = document.getElementById('hire-worker');
+            const saveButton = document.getElementById('save-game');
+            const exportButton = document.getElementById('export-game');
+            const importButton = document.getElementById('import-game');
+            const importFile = document.getElementById('import-file');
             const userIdDisplay = document.getElementById('userId-display');
             const loadingOverlay = document.getElementById('loading-overlay');
+            const actionButton = document.getElementById('action-button');
+            const joystickOuter = document.getElementById('joystick-outer');
+            const joystickInner = document.getElementById('joystick-inner');
 
             // Three.js Scene Setup
             const scene = new THREE.Scene();
@@ -171,11 +228,18 @@
             // Camera Controls
             let touchDragVector = new THREE.Vector2(0, 0);
             let touchStartPoint = null;
+            let touchResetTimer = null;
 
             renderer.domElement.addEventListener('touchstart', (e) => {
-                if (e.target.tagName.toLowerCase() === 'button') return;
+                // Ignore touch events on UI buttons
+                if (e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'input') return;
                 e.preventDefault();
                 touchStartPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+                joystickOuter.style.opacity = 1;
+                joystickOuter.style.left = `${touchStartPoint.x - joystickOuter.offsetWidth / 2}px`;
+                joystickOuter.style.top = `${touchStartPoint.y - joystickOuter.offsetHeight / 2}px`;
+                joystickInner.style.transform = `translate(0, 0)`;
             });
 
             renderer.domElement.addEventListener('touchmove', (e) => {
@@ -184,26 +248,27 @@
                 const deltaX = e.touches[0].clientX - touchStartPoint.x;
                 const deltaY = e.touches[0].clientY - touchStartPoint.y;
 
-                const sensitivity = 0.05;
-                touchDragVector.x = deltaX * sensitivity;
-                touchDragVector.y = deltaY * sensitivity;
+                const maxDistance = joystickOuter.offsetWidth / 2;
+                const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), maxDistance);
+                const angle = Math.atan2(deltaY, deltaX);
 
-                // Restrict drag vector length
-                if (touchDragVector.length() > 1) {
-                    touchDragVector.normalize();
-                }
+                touchDragVector.x = Math.cos(angle) * (distance / maxDistance);
+                touchDragVector.y = Math.sin(angle) * (distance / maxDistance);
+                
+                joystickInner.style.transform = `translate(${touchDragVector.x * maxDistance}px, ${touchDragVector.y * maxDistance}px)`;
 
                 // Smoothly reset drag vector after a short delay
                 clearTimeout(touchResetTimer);
                 touchResetTimer = setTimeout(() => {
                     touchDragVector.set(0, 0);
+                    joystickInner.style.transform = `translate(0, 0)`;
                 }, 100);
-
             });
 
             renderer.domElement.addEventListener('touchend', (e) => {
                 touchStartPoint = null;
                 touchDragVector.set(0, 0);
+                joystickOuter.style.opacity = 0;
             });
             
             // Keyboard Controls
@@ -245,56 +310,52 @@
                 // Main player group
                 player.mesh = new THREE.Group();
 
-                // Body
-                const bodyGeometry = new THREE.BoxGeometry(0.5, 0.8, 0.3);
-                const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+                // Car Body
+                const bodyGeometry = new THREE.BoxGeometry(1.5, 0.6, 3);
+                const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x3a55a8 });
                 const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                body.position.y = 0.4;
+                body.position.y = 0.3;
                 body.castShadow = true;
                 player.mesh.add(body);
 
-                // Head
-                const headGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-                const headMaterial = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
-                const head = new THREE.Mesh(headGeometry, headMaterial);
-                head.position.y = 0.9;
-                head.castShadow = true;
-                player.mesh.add(head);
+                // Car Cabin
+                const cabinGeometry = new THREE.BoxGeometry(1.2, 0.8, 1.5);
+                const cabinMaterial = new THREE.MeshStandardMaterial({ color: 0x5a75c8 });
+                const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+                cabin.position.set(0, 0.8, -0.2);
+                cabin.castShadow = true;
+                player.mesh.add(cabin);
 
-                // Left Arm
-                const armGeometry = new THREE.BoxGeometry(0.15, 0.6, 0.15);
-                const armMaterial = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
-                const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-                leftArm.position.set(-0.325, 0.4, 0);
-                leftArm.castShadow = true;
-                player.mesh.add(leftArm);
+                // Wheels (4x)
+                const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.4, 16);
+                const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 });
 
-                // Right Arm
-                const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-                rightArm.position.set(0.325, 0.4, 0);
-                rightArm.castShadow = true;
-                player.mesh.add(rightArm);
+                const wheel1 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel1.position.set(-0.7, 0.3, 1.2);
+                wheel1.rotation.z = Math.PI / 2;
+                player.mesh.add(wheel1);
 
-                // Left Leg
-                const legGeometry = new THREE.BoxGeometry(0.15, 0.7, 0.15);
-                const legMaterial = new THREE.MeshStandardMaterial({ color: 0x00008b });
-                const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-                leftLeg.position.set(-0.125, -0.25, 0);
-                leftLeg.castShadow = true;
-                player.mesh.add(leftLeg);
+                const wheel2 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel2.position.set(0.7, 0.3, 1.2);
+                wheel2.rotation.z = Math.PI / 2;
+                player.mesh.add(wheel2);
 
-                // Right Leg
-                const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-                rightLeg.position.set(0.125, -0.25, 0);
-                rightLeg.castShadow = true;
-                player.mesh.add(rightLeg);
+                const wheel3 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel3.position.set(-0.7, 0.3, -1.2);
+                wheel3.rotation.z = Math.PI / 2;
+                player.mesh.add(wheel3);
+
+                const wheel4 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel4.position.set(0.7, 0.3, -1.2);
+                wheel4.rotation.z = Math.PI / 2;
+                player.mesh.add(wheel4);
 
                 player.mesh.position.set(0, 0.5, 0);
                 scene.add(player.mesh);
 
                 // Attach the camera to the player mesh
                 player.mesh.add(camera);
-                camera.position.set(0, 5, 10);
+                camera.position.set(0, 10, 15);
                 camera.lookAt(player.mesh.position);
             }
 
@@ -510,6 +571,33 @@
                     }
                 });
 
+                // Check for action proximity
+                let showActionButton = false;
+                if (player.collected) {
+                    // Check for warehouse proximity
+                    const distance = player.mesh.position.distanceTo(warehouse.mesh.position);
+                    if (distance < 4) {
+                        actionButton.textContent = '倉庫で売却する';
+                        actionButton.classList.add('show');
+                        actionButton.onclick = depositCrops;
+                        showActionButton = true;
+                    }
+                } else {
+                    // Check for harvestable fields
+                    const harvestableField = fields.find(f => f.isHarvestable && player.mesh.position.distanceTo(f.mesh.position) < 2);
+                    if (harvestableField) {
+                        actionButton.textContent = '畑で作物を収穫する';
+                        actionButton.classList.add('show');
+                        actionButton.onclick = harvestCrops;
+                        showActionButton = true;
+                    }
+                }
+
+                if (!showActionButton) {
+                    actionButton.classList.remove('show');
+                    actionButton.onclick = null;
+                }
+
                 // Automatic Income
                 if (currentTime - gameState.lastAutoIncomeTime > 1000) {
                     gameState.cash += 1;
@@ -608,12 +696,15 @@
 
                     if (response.ok) {
                         console.log("Game saved to GitHub successfully.");
+                        showMessage('ゲームがセーブされました！');
                     } else {
                         console.error("Error saving game:", await response.json());
+                        showMessage('セーブに失敗しました。');
                     }
 
                 } catch (e) {
                     console.error("Error saving game: ", e);
+                    showMessage('セーブに失敗しました。');
                 } finally {
                     isSaving = false;
                 }
@@ -626,42 +717,7 @@
 
                     if (response.ok) {
                         const data = await response.json();
-                        gameState.cash = data.cash;
-                        player.speed = data.playerSpeed;
-                        player.harvestAbility = data.playerHarvestAbility;
-                        
-                        // Set the player's position
-                        player.mesh.position.fromArray(data.playerPos);
-
-                        // Remove old fields and create new ones based on loaded data
-                        fields.forEach(field => {
-                            scene.remove(field.mesh);
-                            scene.remove(field.cropMesh);
-                        });
-                        fields = [];
-
-                        data.fields.forEach(fieldData => {
-                            const fieldMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.2, 2), new THREE.MeshStandardMaterial({ color: 0xC0A068 }));
-                            fieldMesh.position.fromArray(fieldData.position);
-                            fieldMesh.receiveShadow = true;
-                            scene.add(fieldMesh);
-
-                            const cropMesh = createCropMesh(fieldData.cropType);
-                            cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
-                            scene.add(cropMesh);
-                            cropMesh.visible = fieldData.isHarvestable;
-
-                            fields.push({
-                                mesh: fieldMesh,
-                                cropMesh: cropMesh,
-                                isHarvestable: fieldData.isHarvestable,
-                                plantTime: fieldData.plantTime,
-                                cropType: fieldData.cropType,
-                                value: fieldData.value
-                            });
-                        });
-                        
-                        cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+                        applyGameData(data);
                         showMessage('ゲームデータを読み込みました！');
                         console.log("Game loaded successfully.");
                     } else {
@@ -671,6 +727,93 @@
                     console.error("Error loading game: ", e);
                 }
             }
+
+            function applyGameData(data) {
+                gameState.cash = data.cash;
+                player.speed = data.playerSpeed;
+                player.harvestAbility = data.playerHarvestAbility;
+                
+                // Set the player's position
+                player.mesh.position.fromArray(data.playerPos);
+
+                // Remove old fields and create new ones based on loaded data
+                fields.forEach(field => {
+                    scene.remove(field.mesh);
+                    scene.remove(field.cropMesh);
+                });
+                fields = [];
+
+                data.fields.forEach(fieldData => {
+                    const fieldMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.2, 2), new THREE.MeshStandardMaterial({ color: 0xC0A068 }));
+                    fieldMesh.position.fromArray(fieldData.position);
+                    fieldMesh.receiveShadow = true;
+                    scene.add(fieldMesh);
+
+                    const cropMesh = createCropMesh(fieldData.cropType);
+                    cropMesh.position.set(fieldMesh.position.x, 0.6, fieldMesh.position.z);
+                    scene.add(cropMesh);
+                    cropMesh.visible = fieldData.isHarvestable;
+
+                    fields.push({
+                        mesh: fieldMesh,
+                        cropMesh: cropMesh,
+                        isHarvestable: fieldData.isHarvestable,
+                        plantTime: fieldData.plantTime,
+                        cropType: fieldData.cropType,
+                        value: fieldData.value
+                    });
+                });
+                cashDisplay.textContent = `キャッシュ: ${gameState.cash}`;
+            }
+
+            // Export game to a local file
+            function exportGame() {
+                const gameData = JSON.stringify({
+                    cash: gameState.cash,
+                    playerSpeed: player.speed,
+                    playerHarvestAbility: player.harvestAbility,
+                    playerPos: new THREE.Vector3().copy(player.mesh.position).toArray(),
+                    fields: fields.map(f => ({
+                        position: new THREE.Vector3().copy(f.mesh.position).toArray(),
+                        isHarvestable: f.isHarvestable,
+                        plantTime: f.plantTime,
+                        cropType: f.cropType,
+                        value: f.value
+                    }))
+                }, null, 2); // Pretty print JSON
+
+                const blob = new Blob([gameData], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `farm_game_save_${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showMessage('ゲームデータがエクスポートされました！');
+            }
+
+            // Import game from a local file
+            function importGame() {
+                importFile.click(); // Trigger the file input dialog
+            }
+
+            importFile.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        applyGameData(data);
+                        showMessage('ゲームデータがインポートされました！');
+                    } catch (error) {
+                        showMessage('ファイルの読み込みに失敗しました。');
+                        console.error("Failed to parse JSON:", error);
+                    }
+                };
+                reader.readAsText(file);
+            });
 
             // Animation Loop
             function animate() {
@@ -725,6 +868,10 @@
                      showMessage('キャッシュが足りません！');
                  }
             });
+            
+            saveButton.addEventListener('click', saveGame);
+            exportButton.addEventListener('click', exportGame);
+            importButton.addEventListener('click', importGame);
             
             userIdDisplay.textContent = `User ID: ${userId}`;
 
