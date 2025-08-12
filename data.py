@@ -2,9 +2,13 @@ from flask import Flask, request, jsonify
 import requests
 import base64
 import os
+from flask import Flask, request
+from flask_cors import CORS
 
+
+#っbhbhbふhjんjn
 app = Flask(__name__)
-
+CORS(app) # これだけで、すべてのオリジンからのリクエストを許可します
 # GitHub APIのベースURL
 GITHUB_API_URL = "https://api.github.com"
 # Vercelの環境変数からトークンを取得
